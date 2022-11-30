@@ -15,7 +15,7 @@
   - [Example catalog result for STAC API - Collection Search](#example-catalog-result-for-stac-api---collection-search)
   - [Extensions](#extensions)
 
-- **OpenAPI specification:** [openapi.yaml](openapi.yaml) ([rendered version](https://api.stacspec.org/v1.0.0-rc.2/core)),
+- **OpenAPI specification:** [openapi.yaml](openapi.yaml)
 - **Conformance URIs:**
   - <https://api.stacspec.org/v1.0.0-rc.2/collection-search>
 - **Maturity Classification:** Proposal
