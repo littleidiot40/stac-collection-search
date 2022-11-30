@@ -110,9 +110,6 @@ When filtering with a 3D bbox over Items with 2D geometries, it is assumed that 
 The specific set of text keys/fields/properties of a resource to which the q operator is applied 
 SHALL be left to the discretion of the implementation.
 
-Collections shall advertise the query parameters they support at the `/collections/{collection-id}/queryables` endpoint that 
-shall return a JSON Schema document as defined in [OGC API-Features - Part 3:Filtering](https://docs.opengeospatial.org/DRAFTS/19-079r1.html#filter-queryables).
-
 ## Response
 
 The response to a request (GET or POST) to the collection search endpoint must always be a 
@@ -129,7 +126,7 @@ The parameter name is defined by the implementor and is not necessarily part of 
 ```json
 {
     "type": "Catalog",
-    "collections": []],
+    "collections": [],
     "links": [
         {
             "rel": "prev",
