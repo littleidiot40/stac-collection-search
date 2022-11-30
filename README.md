@@ -47,7 +47,7 @@ These endpoints are required, with details provided in this [OpenAPI specificati
 
 | Endpoint       | Returns                                                                                      | Description                          |
 | -------------- | -------------------------------------------------------------------------------------------- | ------------------------------------ |
-| `/collections` | [Catalog](https://github.com/radiantearth/stac-api-spec/tree/main/stac-spec/collection-spec) | Returns a filterable set of [feature collections](https://docs.opengeospatial.org/is/17-069r3/17-069r3.html#_collections_) |
+| `/collections` | [Catalog](https://github.com/radiantearth/stac-api-spec/tree/main/stac-spec/collection-spec) | Returns a filterable set of [collections](https://docs.opengeospatial.org/is/17-069r3/17-069r3.html#_collections_) |
 
 ## Query Parameters and Fields
 
