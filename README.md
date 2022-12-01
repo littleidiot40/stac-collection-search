@@ -28,13 +28,13 @@ It retrieves a group of collections that match the provided parameters, wrapped 
 Implementing GET /search is required, POST /search is optional, but recommended.
 
 ## Link Relations
-The following Link relations must exist in the Landing Page (root).
+The following Link relation must exist in the Landing Page (root).
 
 | **rel**        | **href**       | **From**  | **Description**                                     |
 | -------------- | -------------  | --------- | --------------------------------------------------- |
 | `search`       | `/collections` | Extension | **REQUIRED** URL for the Collection Search endpoint |
 
-This search link relation must have a type of application/json. If no method attribute is specified, 
+This search link relation must have a type of `application/json`. If no method attribute is specified, 
 it is assumed to represent a GET request. If the server supports both GET and POST requests, two links should be included, 
 one with a method of GET one with a method of POST.
 
@@ -47,14 +47,14 @@ These endpoints are required, with details provided in this [OpenAPI specificati
 
 | Endpoint       | Returns                                                                                      | Description                          |
 | -------------- | -------------------------------------------------------------------------------------------- | ------------------------------------ |
-| `/collections` | [Catalog](https://github.com/radiantearth/stac-api-spec/tree/main/stac-spec/collection-spec) | Returns a filterable set of [collections](https://docs.opengeospatial.org/is/17-069r3/17-069r3.html#_collections_) |
+| `/collections` | [Catalog](https://github.com/radiantearth/stac-api-spec/tree/main/stac-spec/catalog-spec) | Returns a filterable set of [collections](https://docs.opengeospatial.org/is/17-069r3/17-069r3.html#_collections_) |
 
 ## Query Parameters and Fields
 
 The following list of parameters is used to narrow search queries. They can all be represented as query string parameters in a GET request, 
 or as JSON entity fields in a POST request. For filters that represent a set of values, 
-query parameters must use comma-separated string values with no enclosing brackets (\[ or \]) a
-d no whitespace between values, and JSON entity attributes must use JSON Arrays.
+query parameters must use comma-separated string values with no enclosing brackets (\[ or \]),
+no whitespace between values, and JSON entity attributes must use JSON Arrays.
 
 ### Query Examples
 
@@ -80,6 +80,8 @@ to facilitate efficient collection discovery.
 | intersects  | GeoJSON Geometry | STAC       | Searches Collections by performing intersection between their geometry and provided GeoJSON geometry.  All GeoJSON geometry types must be supported.           |
 | ids         | \[string]        | STAC       | **REQUIRED** Array of Collection ids to return.                                                                 |
 | q           | \[string]        | [OGC API-Records](https://docs.ogc.org/DRAFTS/20-004.html#_parameter_q) | **REQUIRED** String value for textual search.   |
+| type        | \[string]        | [OGC API-Records](https://docs.ogc.org/DRAFTS/20-004.html#core-query-parameters-type) | One or more values associated with an enumeration of types of collection |
+| externalId  | \[string]        | [OGC API-Records](https://docs.ogc.org/DRAFTS/20-004.html#core-query-parameters-externalid) | One or more values associated with External Identifiers of a collection |
 
 **limit** The `limit` parameter follows the same semantics of the OAFeat Item resource limit parameter. 
 The value is a suggestion to the server as to the maximum number of Item objects the client would prefer in the response. 
@@ -110,14 +112,22 @@ When filtering with a 3D bbox over Items with 2D geometries, it is assumed that 
 The specific set of text keys/fields/properties of a resource to which the q operator is applied 
 SHALL be left to the discretion of the implementation.
 
+**type** The `type` parameter should contain one or more values of an enumeration of known collection types. 
+If the `type` parameter is provided by the client, only collections whose type, 
+as indicated by the value(s) provided, are equal to one of the listed values shall be in the result set.
+
+**externalId** The `externalId` parameter should contain one or more values corresponding to external IDs of collections with the catalog.
+If the `externalId` parameter is provided by the client, only collections, 
+as indicated by the value(s) provided, whose external IDs are equal to one of the listed values shall be in the result set.
+
 ## Response
 
 The response to a request (GET or POST) to the collection search endpoint must always be a 
-Catalog object - a valid GeoJSON FeatureCollection that consists entirely of STAC Collection objects.
+Catalog object that consists entirely of STAC Collection objects.
 
 ### Pagination
 
-OGC API supports paging through hypermedia links and STAC follows the same pattern for the cross collection search. 
+OGC API supports paging through hypermedia links and STAC follows the same pattern for a collection search. 
 For GET requests, a link with `rel` type `next` is supplied. 
 This link may contain any URL parameter that is necessary for the implementation to understand how to provide the next page of 
 results, eg: `page`, `next`, `token`, etc. 
