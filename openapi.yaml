@@ -32,13 +32,14 @@ paths:
       tags:
         - Collection Search
       parameters:
-        - $ref: '#/components/parameters/bbox'
-        - $ref: '#/components/parameters/intersects'
-        - $ref: '#/components/parameters/datetime'
-        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/q'
         - $ref: '#/components/parameters/ids'
         - $ref: '#/components/parameters/externalIds'
-        - $ref: '#/components/parameters/q'
+        - $ref: '#/components/parameters/type'
+        - $ref: '#/components/parameters/datetime'
+        - $ref: '#/components/parameters/bbox'
+        - $ref: '#/components/parameters/intersects'
+        - $ref: '#/components/parameters/limit'  
       responses:
         '200':
           description: A catalog of collection objects.
@@ -91,16 +92,34 @@ components:
         Free text keywords for collection filtering.
       required: false
       schema:
-        $ref: '#/components/schemas/q'
+        $ref: '#/components/schemas/qFilter'
       explode: false
     ids:
       name: ids
       in: query
       description: |-
-        Array of Collection ids to return.
+        Array of Collection ids hat map to collections to return.
       required: false
       schema:
-        $ref: '#/components/schemas/ids'
+        $ref: '#/components/schemas/idsFilter'
+      explode: false
+    externalIds:
+      name: externalIds
+      in: query
+      description: |-
+        Array of external ids that map to collections to return.
+      required: false
+      schema:
+        $ref: '#/components/schemas/externalIdsFilter'
+      explode: false
+    type:
+      name: type
+      in: query
+      description: |-
+        Array of external ids that map to collections to return.
+      required: false
+      schema:
+        $ref: '#/components/schemas/typeFilter'
       explode: false
     datetime:
       name: datetime
@@ -123,7 +142,7 @@ components:
         the extent or all relevant temporal properties.
       required: false
       schema:
-        type: string
+         $ref: '#/components/schemas/datetimeFilter'
       style: form
       explode: false
     bbox:
@@ -164,14 +183,18 @@ components:
         `bbox=160.6,-55.95,-170,-25.89`.
       required: false
       schema:
-        type: array
-        oneOf:
-          - minItems: 4
-            maxItems: 4
-          - minItems: 6
-            maxItems: 6
-        items:
-          type: number
+         $ref: '#/components/schemas/bboxFilter'
+      style: form
+      explode: false
+    intersects:
+      name: intersects
+      in: query
+      description: |-
+        The optional intersects parameter filters the result Items in the same was as bbox, only with
+        a GeoJSON Geometry rather than a bbox.
+      required: false
+      schema:
+        $ref: '#/components/schemas/intersectsFilter'
       style: form
       explode: false
     limit:
@@ -186,21 +209,7 @@ components:
         Minimum = 1. Maximum = 10000. Default = 10.
       required: false
       schema:
-        type: integer
-        minimum: 1
-        maximum: 10000
-        default: 10
-      style: form
-      explode: false
-    intersects:
-      name: intersects
-      in: query
-      description: |-
-        The optional intersects parameter filters the result Items in the same was as bbox, only with
-        a GeoJSON Geometry rather than a bbox.
-      required: false
-      schema:
-        $ref: '../core/commons.yaml#/components/schemas/geometryGeoJSON'
+        $ref: '#/components/schemas/limitFilter'
       style: form
       explode: false
   schemas:
@@ -209,42 +218,35 @@ components:
       type: object
       allOf:
         - $ref: '#/components/schemas/qFilter'
-        - $ref: '#/components/schemas/bboxFilter'
-        - $ref: '#/components/schemas/datetimeFilter'
-        - $ref: '#/components/schemas/intersectsFilter'
-        - $ref: '#/components/schemas/collectionsFilter'
         - $ref: '#/components/schemas/idsFilter'
-        - $ref: '#/components/schemas/limitFilter'
-    q:
-      type: string
-      description: |-
-        The optional free text query string.
-    limit:
-      type: integer
-      minimum: 1
-      example: 10
-      default: 10
-      maximum: 10000
-      description: |-
-        The optional limit parameter limits the number of items that are presented in the response document.
-
-        If the limit parameter value is greater than advertised limit maximum, the server must return the
-        maximum possible number of items, rather than responding with an error.
-
-        Only items are counted that are on the first level of the collection in the response document.
-        Nested objects contained within the explicitly requested items must not be counted.
-
-        Minimum = 1. Maximum = 10000. Default = 10.
+        - $ref: '#/components/schemas/externalIdsFilter'
+        - $ref: '#/components/schemas/typeFilter'
+        - $ref: '#/components/schemas/datetimeFilter'
+        - $ref: '#/components/schemas/bboxFilter'
+        - $ref: '#/components/schemas/intersectsFilter'
+        - $ref: '#/components/schemas/limitFilter'   
+    qFilter:
+      type: object
+      description: Free text keywords for collection filtering.
+      properties:
+        q:
+          type: string   
     bboxFilter:
       type: object
       description: Only return items that intersect the provided bounding box.
       properties:
         bbox:
-          $ref: '../core/commons.yaml#/components/schemas/bbox'
-    ids:
+          $ref: 'https://github.com/radiantearth/stac-api-spec/blob/main/stac-spec/core/commons.yaml#/components/schemas/bbox'
+    idsFilter:
       type: array
       description: |-
-        Array of Item ids to return.
+        Array of collection ids that map to collections to return.
+      items:
+        type: string
+    externalIdsFilter:
+      type: array
+      description: |-
+        Array of external ids that map to collections to return.
       items:
         type: string
     datetimeFilter:
@@ -252,47 +254,38 @@ components:
       type: object
       properties:
         datetime:
-          $ref: '#/components/schemas/datetime_interval'
+          type: string
+          description: |-
+            Either a date-time or an interval, open or closed. Date and time expressions
+            adhere to RFC 3339. Open intervals are expressed using double-dots.
+            Examples:
+            * A date-time: "2018-02-12T23:20:50Z"
+            * A closed interval: "2018-02-12T00:00:00Z/2018-03-18T12:31:12Z"
+            * Open intervals: "2018-02-12T00:00:00Z/.." or "../2018-03-18T12:31:12Z"
+            Only features that have a temporal property that intersects the value of
+            `datetime` are selected.
+            If a feature has multiple temporal properties, it is the decision of the
+            server whether only a single temporal property is used to determine
+            the extent or all relevant temporal properties.
+            example: '2018-02-12T00:00:00Z/2018-03-18T12:31:12Z'
     intersectsFilter:
       type: object
       description: Only returns items that intersect with the provided polygon.
       properties:
         intersects:
-          $ref: '../core/commons.yaml#/components/schemas/geometryGeoJSON'
-    qFilter:
-      type: object
-      description: Free text keywords for collection filtering.
-      properties:
-        q:
-          $ref: '#/components/schemas/q'
+          $ref: 'https://github.com/radiantearth/stac-api-spec/blob/main/stac-spec/core/commons.yaml#/components/schemas/geometryGeoJSON'  
     limitFilter:
       type: object
       description: Only returns maximum number of results (page size)
       properties:
         limit:
-          $ref: '#/components/schemas/limit'
-    idsFilter:
-      type: object
-      description: Only returns items that match the array of given ids
-      properties:
-        ids:
-          $ref: '#/components/schemas/ids'
-    datetime_interval:
-      type: string
+          type: integer
+          minimum: 1
+          maximum: 10000
+          default: 10
+    typeFilter:
+      type: array
       description: |-
-        Either a date-time or an interval, open or closed. Date and time expressions
-        adhere to RFC 3339. Open intervals are expressed using double-dots.
-
-        Examples:
-
-        * A date-time: "2018-02-12T23:20:50Z"
-        * A closed interval: "2018-02-12T00:00:00Z/2018-03-18T12:31:12Z"
-        * Open intervals: "2018-02-12T00:00:00Z/.." or "../2018-03-18T12:31:12Z"
-
-        Only features that have a temporal property that intersects the value of
-        `datetime` are selected.
-
-        If a feature has multiple temporal properties, it is the decision of the
-        server whether only a single temporal property is used to determine
-        the extent or all relevant temporal properties.
-      example: '2018-02-12T00:00:00Z/2018-03-18T12:31:12Z'
+        Array of collection types that map to collections to return.
+      items:
+        type: string
