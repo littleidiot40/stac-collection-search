@@ -23,7 +23,7 @@
   - [Core](https://github.com/radiantearth/stac-api-spec/tree/main/core)
 
 A collection search endpoint provides the ability to filter STAC collections. 
-It retrieves a group of collections that match the provided parameters, wrapped in a Catalog.
+It retrieves a group of collections that match the provided parameters, wrapped in a [STAC Catalog](https://github.com/radiantearth/stac-api-spec/tree/main/stac-spec/catalog-spec).
 
 Implementing GET /search is required, POST /search is optional, but recommended.
 
@@ -51,7 +51,7 @@ These endpoints are required, with details provided in this [OpenAPI specificati
 
 ## Query Parameters and Fields
 
-The following list of parameters is used to narrow search queries. They can all be represented as query string parameters in a GET request, 
+The following list of parameters is used to narrow search results. They can all be represented as query string parameters in a GET request, 
 or as JSON entity fields in a POST request. For filters that represent a set of values, 
 query parameters must use comma-separated string values with no enclosing brackets (\[ or \]),
 no whitespace between values, and JSON entity attributes must use JSON Arrays.
@@ -77,14 +77,14 @@ to facilitate efficient collection discovery.
 | limit       | integer          | [OAFeat](https://docs.ogc.org/DRAFTS/20-004.html#_parameter_limit)     | **REQUIRED** The maximum number of results to return (page size).                                                                                       |
 | bbox        | \[number]        | [OAFeat](https://docs.ogc.org/DRAFTS/20-004.html#_parameter_bbox)     | **REQUIRED** Requested bounding box.                                                   |
 | datetime    | string           | [OAFeat](https://docs.ogc.org/DRAFTS/20-004.html#_parameter_datetime)     | **REQUIRED** Single date+time, or a range ('/' separator), formatted to [RFC 3339, section 5.6](https://tools.ietf.org/html/rfc3339#section-5.6). Use double dots `..` for open date ranges. |
-| intersects  | GeoJSON Geometry | STAC       | Searches Collections by performing intersection between their geometry and provided GeoJSON geometry.  All GeoJSON geometry types must be supported.           |
-| ids         | \[string]        | STAC       | **REQUIRED** Array of Collection ids to return.                                                                 |
+| intersects  | GeoJSON Geometry | STAC       | Searches Collections by performing intersection between their geometry and provided [GeoJSON geometry](https://geojson.org/)    .  All GeoJSON geometry types must be supported.           |
+| ids         | \[string]        | STAC       | **REQUIRED** Set of Collections to return defined by their ids.                                                                 |
 | q           | \[string]        | [OGC API-Records](https://docs.ogc.org/DRAFTS/20-004.html#_parameter_q) | **REQUIRED** String value for textual search.   |
-| type        | \[string]        | [OGC API-Records](https://docs.ogc.org/DRAFTS/20-004.html#core-query-parameters-type) | One or more values associated with an enumeration of types of collection |
-| externalId  | \[string]        | [OGC API-Records](https://docs.ogc.org/DRAFTS/20-004.html#core-query-parameters-externalid) | One or more values associated with External Identifiers of a collection |
+| type        | \[string]        | [OGC API-Records](https://docs.ogc.org/DRAFTS/20-004.html#core-query-parameters-type) | Set values associated with an enumeration of types of collection |
+| externalId  | \[string]        | [OGC API-Records](https://docs.ogc.org/DRAFTS/20-004.html#core-query-parameters-externalid) | Set of Collections to return defined by their external ids |
 
 **limit** The `limit` parameter follows the same semantics of the OAFeat Item resource limit parameter. 
-The value is a suggestion to the server as to the maximum number of Item objects the client would prefer in the response. 
+The value is a suggestion to the server as to the maximum number of collection objects the client would prefer in the response. 
 The OpenAPI specification defines the default and maximum values for this parameter. 
 The base specifications define these with a default of 10 and a maximum of 10000, 
 but implementers may choose other values to advertise through their service-desc endpoint.
@@ -92,9 +92,8 @@ If the `limit` parameter value is greater than the advertised maximum limit,
 the server must return the maximum possible number of items (ideally, 
 the number as the advertised maximum limit), rather than responding with an error.
 
-**datetime** The `datetime` parameter use the same allowed values as the OAF datetime parameter. 
-This allows for either a single RFC 3339 datetime or an open or closed interval that also uses RFC 3339 datetimes. 
-Additional details about this parameter can be found in the Implementation Recommendations.
+**datetime** The `datetime` parameter uses the same allowed values as the OAF datetime parameter. 
+This allows for either a single RFC 3339 datetime or an open or closed interval that also uses RFC 3339 datetimes.
 
 **bbox** Represented using either 2D or 3D geometries. The length of the array must be 2*n where n is the number of dimensions. 
 The array contains all axes of the southwesterly most extent followed by all axes of the northeasterly most extent 
@@ -102,11 +101,13 @@ specified in Longitude/Latitude or Longitude/Latitude/Elevation based on WGS 84.
 the elevation of the southwesterly most extent is the minimum elevation in meters and the elevation of the northeasterly most extent is the maximum. 
 When filtering with a 3D bbox over Items with 2D geometries, it is assumed that the 2D geometries are at elevation 0.
 
-**intersects** Where is this defined in STAC?
+**intersects** The `intersects` parameter allow for filtering by more complex geometries than bounding box. Any [GeoJSON geometry](https://geojson.org/) may be supplied and the response will only contain collections whose spatial extent instersects with the geometry supplied
 
 *Note:* Only one of either intersects or bbox may be specified. If both are specified, a 400 Bad Request response must be returned.
 
-**ids** A set of collection ids that will filter the catalog to those collections specified
+**ids** The `ids` parameter should contain one or more values corresponding to IDs of collections with the catalog.
+If the `ids` parameter is provided by the client, only collections, 
+as indicated by the value(s) provided, whose IDs are equal to one of the listed values shall be in the result set.
 
 **q** Keyword searches using the `q` parameter SHALL be case insensitive. 
 The specific set of text keys/fields/properties of a resource to which the q operator is applied 
@@ -262,13 +263,13 @@ parameters (such as intersect, as well as additional filters from the query exte
 {
     "id": "Collection-search-results",
     "stac_version": "1.0.0",
-    "description": "Collections matching query 'foo'",
+    "description": "Collections matching query 'bbox=-10.415,36.066,3.779,44.213&limit=200&datetime=2017-05-05T00:00:00Z'",
     "license": "not-provided",
     "type": "Catalog",
     "links": [
         {
             "rel": "self",
-            "href": "/collections",
+            "href": "/collections?bbox=-10.415,36.066,3.779,44.213&limit=200&datetime=2017-05-05T00:00:00Z",
             "title": "Collections matching query 'foo'",
             "type": "application/json"
         },
@@ -280,7 +281,7 @@ parameters (such as intersect, as well as additional filters from the query exte
         },
         {
             "rel": "next",
-            "href": "/collections?page=2"
+            "href": "/collections?bbox=-10.415,36.066,3.779,44.213&limit=200&datetime=2017-05-05T00:00:00Z&page=2"
         }
     ],
     "collections": [
@@ -409,7 +410,7 @@ parameters (such as intersect, as well as additional filters from the query exte
                 "temporal": {
                     "interval": [
                         [
-                            "2020-02-14T00:00:00.000Z",
+                            "2017-02-14T00:00:00.000Z",
                             null
                         ]
                     ]
